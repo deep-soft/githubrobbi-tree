@@ -16,6 +16,12 @@ jobs:
       url: ${{ steps.create_release.outputs.url }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
+    - name: Create release.txt
+      shell: bash
+      run: |
+        echo ${{ github.sha }} > release.txt;
+        ls -la release.txt;
+
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v3
@@ -26,6 +32,8 @@ jobs:
         # release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
+        files: |
+          release.txt
 
   build-release:
     name: Build Release
@@ -67,9 +75,10 @@ jobs:
       shell: bash
       run: |
         cargo build --release --target ${{ matrix.target }};
-        ls -la ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }};
-        echo ${{ github.sha }} > ./Release.txt;
-        ls -la ./Release.txt;
+        mv \
+          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} \
+          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}-${{ matrix.os }};
+        ls -la ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}-${{ matrix.os }};
 
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v3
@@ -79,5 +88,4 @@ jobs:
         # tag_name: ${{ github.ref }}
         # release_name: Release ${{ github.ref }}
         files: |
-          ./Release.txt
-          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}--${{ matrix.os }}
