@@ -65,8 +65,10 @@ jobs:
 
     - name: Build release binary
       run: |
-        cargo build --release --target ${{ matrix.target }}
-        echo ${{ github.sha }} > Release.txt
+        cargo build --release --target ${{ matrix.target }};
+        ls -la ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }};
+        echo ${{ github.sha }} > ./Release.txt;
+        ls -la ./Release.txt;
 
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v3
@@ -75,6 +77,6 @@ jobs:
       with:
         # tag_name: ${{ github.ref }}
         # release_name: Release ${{ github.ref }}
-        files:
+        files: |
+          ./Release.txt
           ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-          Release.txt
