@@ -1,0 +1,91 @@
+name: act-Release-win7
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  WIN7_RUST_VERSION: '1.75'
+  PROG_NAME:    'tree-win7'
+  TAG_NAME:     'tree-win7'
+  PROG_VERSION: '0.1.0'
+  TAG_VERSION:  '0.1.0'
+
+jobs:
+  build-release-win7:
+    name: Build Release win7
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: tree.exe
+            asset_name: tree-windows-x86_64-win7.exe
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+## -- read from toml - begin
+    - name: Read toml package.version
+      uses: deep-soft/toml-action@v2
+      id: read_toml_version
+      with:
+        file: 'Cargo.toml'
+        field: 'package.version'
+
+    - name: Set env.PROG_VERSION
+      shell: bash
+      run: |
+        echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+
+        echo "set PROG_VERSION with value from Cargo.toml"
+        _version_=${{ steps.read_toml_version.outputs.value }}
+        prog_version="v"$_version_
+
+        echo "PROG_VERSION = $prog_version"
+        echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version"
+
+        echo "set env.PROG_VERSION with value from Cargo.toml"
+        echo "PROG_VERSION=$prog_version" >> $GITHUB_ENV
+        echo "VERSION=$_version_" >> $GITHUB_ENV
+        echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version" >> $GITHUB_ENV
+
+    - name: Print env.PROG_VERSION
+      shell: bash
+      run: |
+        echo "show new value for env.PROG_VERSION"
+        echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+        echo "TAG_VERSION  = ${{ env.TAG_VERSION  }}"
+
+## -- read from toml - end
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+        toolchain: ${{ env.WIN7_RUST_VERSION }}
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build release binary
+      shell: bash
+      run: |
+        cargo build --release --target ${{ matrix.target }};
+        mv \
+          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} \
+          ./target/${{ matrix.target }}/release/${{ matrix.asset_name }};
+        ls -la ./target/${{ matrix.target }}/release/${{ matrix.asset_name }};
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v3
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # tag_name: ${{ github.ref }}
+        # release_name: Release ${{ github.ref }}
+        tag_name: ${{ env.TAG_NAME }}-${{ env.TAG_VERSION }}
+        files: |
+          ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
