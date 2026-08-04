@@ -37,6 +37,7 @@ pub fn print_directory_tree_to_writer<W: Write>(
     root: &Path,
     writer: &mut W,
     show_files: bool,
+    unicode_symbols: bool,
 ) -> Result<()> {
     writeln!(writer, "{}", root.display()).context("failed to write root path")?;
 
@@ -47,7 +48,12 @@ pub fn print_directory_tree_to_writer<W: Write>(
 
     let ignore_set = HashSet::<String>::from_iter(read_ignore_patterns(root)?);
 
-    render_tree(root, "", writer, &ignore_set, show_files)?;
+    if unicode_symbols {
+      render_tree_unicode(root, "", writer, &ignore_set, show_files)?;
+    }
+    else {
+      render_tree_ascii(root, "", writer, &ignore_set, show_files)?;
+    }
 
     Ok(())
 }
@@ -149,7 +155,34 @@ fn read_ignore_patterns(dir: &Path) -> Result<Vec<String>> {
 /* -------------------------------------------------------------------------- */
 
 /// Recursive pretty printer using `ignore::WalkBuilder` for Git integration.
-fn render_tree<W: Write>(
+fn render_tree_ascii<W: Write>(
+    dir: &Path,
+    prefix: &str,
+    writer: &mut W,
+    ignore_set: &HashSet<String>,
+    show_files: bool,
+) -> Result<()> {
+    let children = collect_children(dir, ignore_set);
+
+    for (idx, child) in children.iter().enumerate() {
+        let is_last = idx + 1 == children.len();
+        let connector = if is_last { "+-- " } else { "|-- " };
+        let path = child.path();
+        let name = child.file_name().to_string_lossy();
+
+        if path.is_dir() {
+            writeln!(writer, "{prefix}{connector}{name}/").context("failed to write directory")?;
+            let new_prefix = format!("{prefix}{}", if is_last { "    " } else { "|   " });
+            render_tree_ascii(path, &new_prefix, writer, ignore_set, show_files)?;
+        } else if show_files {
+            writeln!(writer, "{prefix}{connector}{name}").context("failed to write file")?;
+        }
+    }
+    Ok(())
+}
+
+/// Recursive pretty printer using `ignore::WalkBuilder` for Git integration. (unicode symbols version)
+fn render_tree_unicode<W: Write>(
     dir: &Path,
     prefix: &str,
     writer: &mut W,
@@ -167,7 +200,7 @@ fn render_tree<W: Write>(
         if path.is_dir() {
             writeln!(writer, "{prefix}{connector}{name}/").context("failed to write directory")?;
             let new_prefix = format!("{prefix}{}", if is_last { "    " } else { "│   " });
-            render_tree(path, &new_prefix, writer, ignore_set, show_files)?;
+            render_tree_unicode(path, &new_prefix, writer, ignore_set, show_files)?;
         } else if show_files {
             writeln!(writer, "{prefix}{connector}{name}").context("failed to write file")?;
         }
