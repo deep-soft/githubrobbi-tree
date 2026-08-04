@@ -77,8 +77,8 @@ jobs:
         cargo build --release --target ${{ matrix.target }};
         mv \
           ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} \
-          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}-${{ matrix.os }};
-        ls -la ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}-${{ matrix.os }};
+          ./target/${{ matrix.target }}/release/${{ matrix.asset_name }};
+        ls -la ./target/${{ matrix.target }}/release/${{ matrix.asset_name }};
 
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v3
@@ -88,4 +88,4 @@ jobs:
         # tag_name: ${{ github.ref }}
         # release_name: Release ${{ github.ref }}
         files: |
-          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}-${{ matrix.os }}
+          ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
