@@ -15,7 +15,7 @@
 //!
 //! ## Key Features
 //!
-//! - **Unicode tree rendering** with proper box-drawing characters
+//! - **Ascii/Unicode tree rendering** with proper box-drawing characters
 //! - **Automatic `.gitignore` integration** via the `ignore` crate
 //! - **Custom ignore patterns** through `.tree_ignore` files
 //! - **Memory efficient** streaming output to any `Write` sink
@@ -141,7 +141,7 @@ pub enum TreeError {
 /// Print a directory hierarchy to any `Write` sink.
 ///
 /// This is the primary function for generating directory tree visualizations.
-/// It produces Unicode-formatted output similar to the Unix `tree` command,
+/// It produces Ascii/Unicode-formatted output similar to the Unix `tree` command,
 /// with automatic `.gitignore` integration and support for custom ignore patterns.
 ///
 /// ## Behavior
@@ -150,7 +150,7 @@ pub enum TreeError {
 /// 2. **Creates `.tree_ignore`** - Generates a default ignore file if none exists
 /// 3. **Respects ignore patterns** - Honors both `.gitignore` and `.tree_ignore` files
 /// 4. **Streams output** - Writes directly to the provided writer for memory efficiency
-/// 5. **Unicode rendering** - Uses proper box-drawing characters for clean display
+/// 5. **Ascii/Unicode rendering** - Uses proper box-drawing characters for clean display
 ///
 /// ## Output Format
 ///
@@ -197,7 +197,7 @@ pub enum TreeError {
 /// - Internal operations encounter unexpected errors ([`TreeError::Other`])
 pub fn print<W: std::io::Write>(root: &Path, writer: &mut W) -> Result<(), TreeError> {
     validate_root(root)?;
-    tree_printer::print_directory_tree_to_writer(root, writer, true).map_err(TreeError::Other)
+    tree_printer::print_directory_tree_to_writer(root, writer, true, false).map_err(TreeError::Other)
 }
 
 /// Generate and print a directory tree with display options.
@@ -244,9 +244,10 @@ pub fn print_with_options<W: std::io::Write>(
     root: &Path,
     writer: &mut W,
     show_files: bool,
+    unicode_symbols: bool,
 ) -> Result<(), TreeError> {
     validate_root(root)?;
-    tree_printer::print_directory_tree_to_writer(root, writer, show_files).map_err(TreeError::Other)
+    tree_printer::print_directory_tree_to_writer(root, writer, show_files, unicode_symbols).map_err(TreeError::Other)
 }
 
 /// Remove every `.tree_ignore` file below the specified root directory.
