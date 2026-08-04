@@ -17,7 +17,7 @@
 //!
 //! ## Features
 //!
-//! - **Unicode tree visualization** with clean box-drawing characters
+//! - **Ascii/Unicode tree visualization** with clean box-drawing characters
 //! - **Automatic `.gitignore` integration** respects existing ignore patterns
 //! - **Custom `.tree_ignore` files** for project-specific filtering
 //! - **Cleanup functionality** to remove generated ignore files
@@ -88,7 +88,7 @@ respects .gitignore files and supports custom .tree_ignore patterns for
 fine-grained control over what gets displayed.
 
 Features:
-  • Unicode tree visualization with clean box-drawing characters
+  • Ascii/Unicode tree visualization with clean box-drawing characters
   • Automatic .gitignore integration
   • Custom .tree_ignore files for project-specific filtering
   • Fast performance with efficient directory traversal
@@ -130,6 +130,12 @@ struct Cli {
     /// Explicitly setting this flag overrides --directories-only if both are specified.
     #[arg(long, short = 'a')]
     all: bool,
+
+    /// unicode version for symbols
+    ///
+    /// Explicitly setting this flag renders unicode version for symbols.
+    #[arg(long, short = 'u')]
+    unicode_symbols: bool,
 }
 
 /// Application entry point and main execution logic.
@@ -167,7 +173,7 @@ fn main() -> Result<()> {
     } else {
         // Print mode: Generate and display directory tree
         let show_files = !cli.directories_only || cli.all;
-        tree::print_with_options(&cli.path, &mut std::io::stdout(), show_files)?;
+        tree::print_with_options(&cli.path, &mut std::io::stdout(), show_files, cli.unicode_symbols)?;
     }
 
     Ok(())
