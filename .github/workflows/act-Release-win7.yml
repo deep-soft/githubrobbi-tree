@@ -5,7 +5,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  WIN7_RUST_VERSION: '1.75'
+  WIN7_RUST_VERSION: '1.77'
   PROG_NAME:    'tree-win7'
   TAG_NAME:     'tree-win7'
   PROG_VERSION: '0.1.0'
